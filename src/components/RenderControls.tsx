@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { useRendering } from "../helpers/use-rendering";
-import { CompositionProps, COMP_NAME } from "../types/constants";
+import { notificationSchema } from "../remotion/Meme/Notification";
+import { CompositionProps } from "../types/constants";
 import { AlignEnd } from "./AlignEnd";
 import { Button } from "./Button/Button";
 import { InputContainer } from "./Container";
@@ -12,10 +13,11 @@ import { Spacing } from "./Spacing";
 
 export const RenderControls: React.FC<{
   text: string;
-  setText: React.Dispatch<React.SetStateAction<string>>;
-  inputProps: z.infer<typeof CompositionProps>;
-}> = ({ text, setText, inputProps }) => {
-  const { renderMedia, state, undo } = useRendering(COMP_NAME, inputProps);
+  setText: (text: string) => void;
+  inputProps: z.infer<typeof notificationSchema> | z.infer<typeof CompositionProps>;
+  compositionId: "Notification" | "MyComp";
+}> = ({ text, setText, inputProps, compositionId }) => {
+  const { renderMedia, state, undo } = useRendering(compositionId, inputProps);
 
   return (
     <InputContainer>
@@ -27,8 +29,8 @@ export const RenderControls: React.FC<{
             disabled={state.status === "invoking"}
             setText={setText}
             text={text}
-          ></Input>
-          <Spacing></Spacing>
+          />
+          <Spacing />
           <AlignEnd>
             <Button
               disabled={state.status === "invoking"}
@@ -39,7 +41,7 @@ export const RenderControls: React.FC<{
             </Button>
           </AlignEnd>
           {state.status === "error" ? (
-            <ErrorComp message={state.error.message}></ErrorComp>
+            <ErrorComp message={state.error.message} />
           ) : null}
         </>
       ) : null}
@@ -48,9 +50,9 @@ export const RenderControls: React.FC<{
           <ProgressBar
             progress={state.status === "rendering" ? state.progress : 1}
           />
-          <Spacing></Spacing>
+          <Spacing />
           <AlignEnd>
-            <DownloadButton undo={undo} state={state}></DownloadButton>
+            <DownloadButton undo={undo} state={state} />
           </AlignEnd>
         </>
       ) : null}

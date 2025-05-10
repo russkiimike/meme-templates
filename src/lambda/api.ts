@@ -5,8 +5,9 @@ import {
   ProgressResponse,
   RenderRequest,
 } from "../types/schema";
-import { CompositionProps } from "../types/constants";
 import { ApiResponse } from "../helpers/api-response";
+import { notificationSchema } from "../remotion/Meme/Notification";
+import { CompositionProps } from "../types/constants";
 
 const makeRequest = async <Res>(
   endpoint: string,
@@ -31,12 +32,22 @@ export const renderVideo = async ({
   id,
   inputProps,
 }: {
-  id: string;
-  inputProps: z.infer<typeof CompositionProps>;
+  id: "Notification" | "MyComp";
+  inputProps: z.infer<typeof notificationSchema> | z.infer<typeof CompositionProps>;
 }) => {
+  // Validate input props based on composition type
+  let validatedProps;
+  if (id === "Notification") {
+    const memeProps = notificationSchema.parse(inputProps);
+    validatedProps = { type: "Notification" as const, ...memeProps };
+  } else {
+    const myCompProps = CompositionProps.parse(inputProps);
+    validatedProps = { type: "MyComp" as const, ...myCompProps };
+  }
+  
   const body: z.infer<typeof RenderRequest> = {
     id,
-    inputProps,
+    inputProps: validatedProps,
   };
 
   return makeRequest<RenderMediaOnLambdaOutput>("/api/lambda/render", body);
@@ -54,5 +65,5 @@ export const getProgress = async ({
     bucketName,
   };
 
-  return makeRequest<ProgressResponse>("/api/lambda/progress", body);
+  return makeRequest<z.infer<typeof ProgressResponse>>("/api/lambda/progress", body);
 };

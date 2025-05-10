@@ -1,27 +1,38 @@
 import { z } from "zod";
+import { notificationSchema } from "../remotion/Meme/Notification";
 import { CompositionProps } from "./constants";
 
 export const RenderRequest = z.object({
   id: z.string(),
-  inputProps: CompositionProps,
+  inputProps: z.union([
+    z.object({
+      type: z.literal("Notification"),
+      ...notificationSchema.shape
+    }),
+    z.object({
+      type: z.literal("MyComp"),
+      ...CompositionProps.shape
+    })
+  ])
 });
 
 export const ProgressRequest = z.object({
-  bucketName: z.string(),
   id: z.string(),
+  bucketName: z.string(),
 });
 
-export type ProgressResponse =
-  | {
-      type: "error";
-      message: string;
-    }
-  | {
-      type: "progress";
-      progress: number;
-    }
-  | {
-      type: "done";
-      url: string;
-      size: number;
-    };
+export const ProgressResponse = z.discriminatedUnion("type", [
+  z.object({
+    type: z.literal("progress"),
+    progress: z.number(),
+  }),
+  z.object({
+    type: z.literal("done"),
+    url: z.string(),
+    size: z.number(),
+  }),
+  z.object({
+    type: z.literal("error"),
+    message: z.string(),
+  }),
+]);
